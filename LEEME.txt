@@ -1,0 +1,20 @@
+REGISTRO DE AVIFAUNA — VERSIÓN 2 PARA ANDROID
+
+Cambios:
+- La persona selecciona el nombre común desde una lista.
+- El nombre científico se completa automáticamente en una columna/campo al lado.
+- Incluye las especies únicas del listado entregado, sin repetir entradas duplicadas.
+- Mantiene fecha, hora, parcela, ubicación, GPS, número de individuos y observaciones.
+- Guarda los registros localmente, exporta CSV para Excel y permite respaldo/restauración JSON.
+
+IMPORTANTE SOBRE EL LISTADO:
+El listado original contiene una posible discordancia en la fila “Gaviota Garuma — Phalacrocorax bougainvilli”. En el resto del listado, Phalacrocorax bougainvilli aparece como Cormorán Guanay. En esta versión se asignó ese nombre científico a Cormorán Guanay y se conservó Gaviota Garuma — Leucophaeus modestus. Revisa esta corrección antes de usar los datos oficialmente.
+
+PUBLICACIÓN:
+1. Descomprime este ZIP.
+2. En tu repositorio GitHub, usa Add file > Upload files y sube los archivos de la raíz: index.html, manifest.json, sw.js y LEEME.txt.
+3. Si GitHub pregunta cómo resolver archivos existentes, confirma que deseas reemplazar los archivos con esta versión.
+4. Haz Commit changes.
+5. Si GitHub Pages ya está activo, espera unos minutos y vuelve a abrir el sitio. Si ves la versión anterior, actualiza la página o cierra y vuelve a abrir la aplicación.
+
+Los registros se guardan en el almacenamiento del navegador de ese dispositivo. Exporta copias de seguridad con frecuencia. El GPS y la instalación PWA requieren HTTPS y permisos del navegador.

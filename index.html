@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#245b48">
+<link rel="manifest" href="manifest.json">
+<title>Registro de avifauna</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#18352b;background:#f4f7f4}
+*{box-sizing:border-box}body{margin:0}header{background:#245b48;color:white;padding:18px 16px}
+header h1{font-size:1.35rem;margin:0 0 5px}header p{margin:0;font-size:.92rem;opacity:.9}
+main{max-width:760px;margin:auto;padding:14px}.panel{background:white;border:1px solid #dce6df;border-radius:14px;padding:16px;margin-bottom:14px}
+h2{font-size:1.05rem;margin:0 0 12px}label{display:block;font-weight:650;font-size:.92rem;margin:12px 0 5px}
+input,select,textarea,button{font:inherit;width:100%;border-radius:9px;padding:11px;border:1px solid #b9c9bf;background:white;color:#18352b}
+textarea{min-height:78px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:0;background:#245b48;color:white;font-weight:700;margin-top:10px;cursor:pointer}
+button.secondary{background:#e8f0eb;color:#245b48;border:1px solid #cbdcd1}
+button.danger{background:#fff0ee;color:#8b2c21;border:1px solid #efc7c1}
+.small{font-size:.82rem;color:#52685c}.entry{border:1px solid #dce6df;border-radius:10px;padding:12px;margin-top:10px}
+.entry strong{display:block;font-size:1rem}.entry p{margin:5px 0;font-size:.9rem;overflow-wrap:anywhere}
+.status{font-size:.9rem;margin-top:8px;min-height:1.2em}
+@media(max-width:480px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>🐦 Registro de avifauna</h1><p>Formulario de terreno · Los datos se guardan en este dispositivo</p></header>
+<main>
+<section class="panel">
+<h2>1. Datos del avistamiento</h2>
+<div class="grid">
+<div><label for="fecha">Fecha</label><input id="fecha" type="date" required></div>
+<div><label for="hora">Hora</label><input id="hora" type="time" required></div>
+</div>
+<label for="parcela">Parcela de referencia</label>
+<select id="parcela"><option>Parcela 2</option><option>Parcela 3</option><option>Parcela 4</option><option>Parcela 5</option><option>Otra / sin asignar</option></select>
+<label for="ubicacion">Ubicación del avistamiento</label>
+<select id="ubicacion"><option>Dentro de la parcela</option><option>Fuera de la parcela (costa)</option><option>Fuera de la parcela (camino)</option></select>
+<label>Georreferencia (GPS)</label>
+<div class="grid"><input id="lat" inputmode="decimal" placeholder="Latitud" aria-label="Latitud"><input id="lon" inputmode="decimal" placeholder="Longitud" aria-label="Longitud"></div>
+<button class="secondary" id="gpsBtn" type="button">Obtener ubicación GPS</button>
+<p class="small">El GPS del celular puede necesitar permiso y una conexión HTTPS. También puedes escribir las coordenadas manualmente.</p>
+<h2 style="margin-top:18px">2. Identificación de la especie</h2>
+<label for="especie">Nombre común · busca y selecciona de la lista</label>
+<select id="especie" required><option value="">Selecciona una especie…</option></select>
+<div class="grid">
+<div><label for="cientifico">Nombre científico</label><input id="cientifico" readonly placeholder="Se completa automáticamente"></div>
+<div><label for="cantidad">Número de individuos</label><input id="cantidad" type="number" min="1" step="1" value="1" required></div>
+</div>
+<label for="obs">Observaciones</label><textarea id="obs" placeholder="Comportamiento, actividad, nido, alimentación u otros antecedentes"></textarea>
+<button id="addBtn">Guardar avistamiento</button><div id="status" class="status" role="status"></div>
+</section>
+<section class="panel">
+<h2>3. Registros guardados</h2>
+<p class="small">Los registros permanecen en este navegador de este dispositivo. Exporta una copia al finalizar la jornada.</p>
+<div class="grid"><button id="csvBtn">Exportar CSV para Excel</button><button id="jsonBtn" class="secondary">Crear copia de respaldo</button></div>
+<div class="grid"><button id="backupBtn" class="secondary">Importar respaldo JSON</button><button id="clearBtn" class="danger">Borrar todos los registros</button></div>
+<input id="fileInput" type="file" accept=".json,application/json" hidden>
+<p id="summary" class="small"></p><div id="records"></div>
+</section>
+</main>
+<script>
+const SPECIES = [{"comun": "Albatros de Salvin", "cientifico": "Thalassarche salvini"}, {"comun": "Chorlo Dorado", "cientifico": "Pluvialis dominica"}, {"comun": "Chorlo Nevado", "cientifico": "Charadrius nivosus"}, {"comun": "Cormorán Guanay", "cientifico": "Phalacrocorax bougainvilli"}, {"comun": "Cormorán Yeco", "cientifico": "Phalacrocorax brasilianus"}, {"comun": "Gaviota Dominicana", "cientifico": "Larus dominicanus"}, {"comun": "Gaviota Garuma", "cientifico": "Leucophaeus modestus"}, {"comun": "Gaviota Franklin", "cientifico": "Leucophaeus pipixcan"}, {"comun": "Gaviota Peruana", "cientifico": "Larus belcheri"}, {"comun": "Gaviotín Chico", "cientifico": "Sternula lorata"}, {"comun": "Gaviotín Elegante", "cientifico": "Thalasseus elegans"}, {"comun": "Gaviotín Sudamericano", "cientifico": "Sterna hirundinacea"}, {"comun": "Huala", "cientifico": "Podiceps major"}, {"comun": "Jote Cabeza Colorada", "cientifico": "Cathartes aura"}, {"comun": "Pelícano", "cientifico": "Pelecanus thagus"}, {"comun": "Pilpilén Común", "cientifico": "Haematopus palliatus"}, {"comun": "Pilpilén Negro", "cientifico": "Haematopus ater"}, {"comun": "Piquero", "cientifico": "Sula variegata"}, {"comun": "Playero Blanco", "cientifico": "Calidris alba"}, {"comun": "Playero de Baird", "cientifico": "Calidris bairdii"}, {"comun": "Playero de las Rompientes", "cientifico": "Calidris virgata"}, {"comun": "Playero Grande", "cientifico": "Tringa semipalmata"}, {"comun": "Playero Vuelvepiedras", "cientifico": "Arenaria interpres"}, {"comun": "Rayadores", "cientifico": "Rynchops niger"}, {"comun": "Traro", "cientifico": "Caracara plancus"}, {"comun": "Zarapito Común", "cientifico": "Numenius phaeopus"}, {"comun": "Zarapito Pico Recto", "cientifico": "Limosa haemastica"}];
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = "registroAvifaunaV2";
+let records = [];
+try { records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch(e) { records=[]; }
+SPECIES.forEach(s=>{const o=document.createElement("option");o.value=s.comun;o.textContent=s.comun;$("especie").appendChild(o);});
+function updateScientific(){const s=SPECIES.find(x=>x.comun===$("especie").value);$("cientifico").value=s?s.cientifico:"";}
+$("especie").addEventListener("change",updateScientific);
+function nowParts(){const d=new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString();return {fecha:local.slice(0,10),hora:local.slice(11,16)};}
+function setNow(){const n=nowParts();$("fecha").value=n.fecha;$("hora").value=n.hora;} setNow();
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));render();}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function render(){
+ $("summary").textContent=`${records.length} registros · ${records.reduce((a,r)=>a+Number(r.cantidad||0),0)} individuos contabilizados`;
+ $("records").innerHTML=records.slice().reverse().map((r,revIndex)=>{const idx=records.length-1-revIndex;return `<article class="entry"><strong>${esc(r.comun||r.especie)} · ${esc(r.cantidad)} individuo(s)</strong><p><i>${esc(r.cientifico||"")}</i></p><p>${esc(r.fecha)} · ${esc(r.hora)} · ${esc(r.parcela)}</p><p>${esc(r.ubicacion)}</p>${r.lat||r.lon?`<p>GPS: ${esc(r.lat)}, ${esc(r.lon)}</p>`:""}${r.obs?`<p>${esc(r.obs)}</p>`:""}<button class="danger" data-delete="${idx}">Eliminar este registro</button></article>`;}).join("");
+ $("records").querySelectorAll("[data-delete]").forEach(b=>b.addEventListener("click",()=>{if(confirm("¿Eliminar este registro?")){records.splice(Number(b.dataset.delete),1);save();}}));
+}
+$("addBtn").addEventListener("click",()=>{
+ const comun=$("especie").value, s=SPECIES.find(x=>x.comun===comun), cantidad=Number($("cantidad").value);
+ if(!s){$("status").textContent="Selecciona una especie de la lista.";return;}
+ if(!Number.isInteger(cantidad)||cantidad<1){$("status").textContent="Ingresa un número entero de individuos mayor que cero.";return;}
+ records.push({fecha:$("fecha").value,hora:$("hora").value,parcela:$("parcela").value,ubicacion:$("ubicacion").value,lat:$("lat").value.trim(),lon:$("lon").value.trim(),comun:s.comun,cientifico:s.cientifico,cantidad,obs:$("obs").value.trim(),creadoEn:new Date().toISOString()});
+ save();$("especie").value="";updateScientific();$("cantidad").value="1";$("obs").value="";$("status").textContent="Avistamiento guardado en este dispositivo.";setNow();
+});
+$("gpsBtn").addEventListener("click",()=>{if(!navigator.geolocation){$("status").textContent="Este navegador no permite obtener GPS.";return;}$("status").textContent="Obteniendo ubicación…";navigator.geolocation.getCurrentPosition(pos=>{$("lat").value=pos.coords.latitude.toFixed(6);$("lon").value=pos.coords.longitude.toFixed(6);$("status").textContent="Coordenadas obtenidas.";},err=>{$("status").textContent="No se pudo obtener el GPS. Revisa los permisos o ingresa las coordenadas manualmente.";},{enableHighAccuracy:true,timeout:15000,maximumAge:0});});
+function download(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
+$("csvBtn").addEventListener("click",()=>{const headers=["Fecha","Hora","Parcela de referencia","Ubicación","Latitud","Longitud","Nombre común","Nombre científico","Número de individuos","Observación"];const rows=records.map(r=>[r.fecha,r.hora,r.parcela,r.ubicacion,r.lat,r.lon,r.comun||r.especie,r.cientifico||"",r.cantidad,r.obs]);const csv=[headers,...rows].map(row=>row.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(";")).join("\r\n");download("registro_avifauna.csv","\uFEFF"+csv,"text/csv;charset=utf-8");});
+$("jsonBtn").addEventListener("click",()=>download("respaldo_avifauna.json",JSON.stringify(records,null,2),"application/json"));
+$("backupBtn").addEventListener("click",()=>$("fileInput").click());
+$("fileInput").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!Array.isArray(data))throw Error();if(confirm(`Se importarán ${data.length} registros. ¿Agregar a los actuales?`)){records=records.concat(data);save();$("status").textContent="Respaldo importado.";}}catch(err){alert("El archivo no parece ser un respaldo JSON válido.");}e.target.value="";});
+$("clearBtn").addEventListener("click",()=>{if(confirm("¿Seguro que quieres borrar TODOS los registros guardados en este dispositivo? Exporta primero una copia si la necesitas.")){records=[];save();$("status").textContent="Se borraron los registros."; }});
+render();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){navigator.serviceWorker.register("./sw.js").catch(()=>{});}
+</script>
+</body>
+</html>
